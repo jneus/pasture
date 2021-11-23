@@ -68,14 +68,14 @@ impl<'a> Device<'a> {
         // == Create an instance from the desired backend =========================================
 
         let backend_bits = match device_options.device_backend {
-            // DeviceBackend::Primary => { wgpu::BackendBit::PRIMARY }
-            // DeviceBackend::Secondary => { wgpu::BackendBit::SECONDARY }
-            DeviceBackend::Vulkan => { wgpu::BackendBit::VULKAN }
-            // DeviceBackend::Metal => { wgpu::BackendBit::METAL }
-            // DeviceBackend::Dx12 => { wgpu::BackendBit::DX12 }
-            // DeviceBackend::Dx11 => { wgpu::BackendBit::DX11 }
-            // DeviceBackend::OpenGL => { wgpu::BackendBit::GL }
-            // DeviceBackend::Browser => { wgpu::BackendBit::BROWSER_WEBGPU }
+            // DeviceBackend::Primary => { wgpu::Backends::PRIMARY }
+            // DeviceBackend::Secondary => { wgpu::Backends::SECONDARY }
+            DeviceBackend::Vulkan => { wgpu::Backends::VULKAN }
+            // DeviceBackend::Metal => { wgpu::Backends::METAL }
+            // DeviceBackend::Dx12 => { wgpu::Backends::DX12 }
+            // DeviceBackend::Dx11 => { wgpu::Backends::DX11 }
+            // DeviceBackend::OpenGL => { wgpu::Backends::GL }
+            // DeviceBackend::Browser => { wgpu::Backends::BROWSER_WEBGPU }
         };
 
         let instance = wgpu::Instance::new(backend_bits);
@@ -93,7 +93,8 @@ impl<'a> Device<'a> {
         let adapter = instance.request_adapter(
             &wgpu::RequestAdapterOptions {
                 power_preference: power_pref,
-                compatible_surface: None
+                compatible_surface: None,
+                force_fallback_adapter: false,
             }
         ).await;
 
@@ -194,7 +195,7 @@ impl<'a> Device<'a> {
             &wgpu::util::BufferInitDescriptor {
                 label: Some("uniform_buffer"),
                 contents: uniform_as_bytes,
-                usage: wgpu::BufferUsage::UNIFORM,
+                usage: wgpu::BufferUsages::UNIFORM,
             }
         );
 
@@ -204,7 +205,7 @@ impl<'a> Device<'a> {
                 entries: &[
                     wgpu::BindGroupLayoutEntry {
                         binding,
-                        visibility: wgpu::ShaderStage::COMPUTE,
+                        visibility: wgpu::ShaderStages::COMPUTE,
                         ty: wgpu::BindingType::Buffer {
                             ty: wgpu::BufferBindingType::Uniform,
                             has_dynamic_offset: false,
@@ -250,7 +251,6 @@ impl<'a> Device<'a> {
             &wgpu::ShaderModuleDescriptor {
                 label: Some("wgsl_computer_shader_module"),
                 source: wgpu::ShaderSource::Wgsl(wgsl_compute_shader_src.into()),
-                flags: self.get_shader_flags(),
             }
         ));
 
@@ -290,26 +290,8 @@ impl<'a> Device<'a> {
             self.wgpu_device.create_shader_module(&wgpu::ShaderModuleDescriptor {
                 label: Some("glsl_compute_shader_module"),
                 source: cs_data,
-                // No flags for .glsl for now (SHADER_FLOAT_64 not parsed to Spir-V)
-                // TODO: issue is known, should be fixed by wgpu in the near future
-                //  see https://github.com/gfx-rs/naga/pull/1209
-                flags: wgpu::ShaderFlags::default(),
             })
         )
-    }
-
-    fn get_shader_flags(&self) -> wgpu::ShaderFlags {
-        // Taken from the wgpu examples, eg.
-        // https://github.com/gfx-rs/wgpu-rs/blob/master/examples/water/main.rs
-        let mut flags = wgpu::ShaderFlags::VALIDATION;
-        match self.adapter.get_info().backend {
-            wgpu::Backend::Vulkan | wgpu::Backend::Metal | wgpu::Backend::Gl => {
-                flags |= wgpu::ShaderFlags::EXPERIMENTAL_TRANSLATION;
-            },
-            _ => {},
-        }
-
-        flags
     }
 
     fn create_compute_pipeline(&self, cs_module: &wgpu::ShaderModule) -> wgpu::ComputePipeline {
