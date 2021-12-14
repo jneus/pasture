@@ -1,0 +1,20 @@
+#version 450
+
+
+
+struct PointBuffer {
+    dvec4 position;
+    uint intensity;
+};
+
+layout(std430, set=0, binding=0) buffer PointBufferSsbo {
+    PointBuffer pointBuffer[];
+};
+
+void main() {
+
+    uint idx = gl_GlobalInvocationID.x;
+    pointBuffer[idx].position.x += 1.0;
+    pointBuffer[idx].intensity += 10;
+
+}

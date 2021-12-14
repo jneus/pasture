@@ -1,0 +1,15 @@
+#version 450
+
+struct PointBufferIn {
+    dvec4 position;
+    uint index;
+};
+
+layout(std450, set=0, binding=0) buffer PointBufferInSsbo {
+    PointBufferIn pointBuffer[];
+};
+
+void main {
+    uint idx = gl_GlobalInvocationID.x;
+    pointBuffer[idx].index = idx;
+}
