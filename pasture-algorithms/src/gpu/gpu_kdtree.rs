@@ -39,6 +39,7 @@ pub struct GpuKdTreeInterleaved {
     x_buffer: Vec<(u32, f64)>,
     y_buffer: Vec<(u32, f64)>,
     z_buffer: Vec<(u32, f64)>,
+    indices: Vec<u32>,
     size: u32,
 }
 
@@ -50,23 +51,21 @@ impl GpuKdTreeInterleaved {
             x_buffer: Vec::new(),
             y_buffer: Vec::new(),
             z_buffer: Vec::new(),
+            indices: Vec::new(),
             size: 0,
         }
     }
 
     pub fn initialize(&mut self, point_buffer: &dyn PointBuffer) {
         let indexed_buffer = GpuKdTreeInterleaved::create_indexed_buffer(point_buffer);
-        let (x_buffer, y_buffer, z_buffer) =
-            GpuKdTreeInterleaved::create_dim_buffers(&indexed_buffer);
+        self.create_dim_buffers(&indexed_buffer);
 
         self.size = indexed_buffer.len() as u32;
         self.point_buffer = Some(indexed_buffer);
-        self.x_buffer = x_buffer;
-        self.y_buffer = y_buffer;
-        self.z_buffer = z_buffer;
 
         let tree_depth = (self.size as f32).log2().ceil() as u32;
         let mut tree_node = &self.root_node;
+
         for current_level in 0..tree_depth {
             let mut dim = current_level % 3;
             match dim {
@@ -77,16 +76,11 @@ impl GpuKdTreeInterleaved {
             }
 
             self.reorganize_points(dim);
-            self.create_nodes(dim);
+            //self.create_nodes(dim);
         }
     }
 
-    fn reorganize_points(&mut self, dim: u32) {
-
-    }
-
-    fn create_nodes(&mut self, dim: u32) {}
-
+    fn reorganize_points(&mut self, dim: u32) {}
     fn create_indexed_buffer(point_buffer: &dyn PointBuffer) -> InterleavedVecPointStorage {
         let point_count = point_buffer.len();
         let mut indexed_buffer = InterleavedVecPointStorage::new(IndexedPointType::layout());
@@ -102,18 +96,12 @@ impl GpuKdTreeInterleaved {
         indexed_buffer
     }
 
-    fn create_dim_buffers(
-        point_buffer: &InterleavedVecPointStorage,
-    ) -> (Vec<(u32, f64)>, Vec<(u32, f64)>, Vec<(u32, f64)>) {
-        let mut x_buffer: Vec<(u32, f64)> = Vec::new();
-        let mut y_buffer: Vec<(u32, f64)> = Vec::new();
-        let mut z_buffer: Vec<(u32, f64)> = Vec::new();
-
+    fn create_dim_buffers(&mut self, point_buffer: &InterleavedVecPointStorage) {
         for point in point_buffer.iter_point::<IndexedPointType>() {
-            x_buffer.push((point.index, point.position.x));
-            y_buffer.push((point.index, point.position.y));
-            z_buffer.push((point.index, point.position.z));
+            self.x_buffer.push((point.index, point.position.x));
+            self.y_buffer.push((point.index, point.position.y));
+            self.z_buffer.push((point.index, point.position.z));
+            self.indices.push(point.index);
         }
-        (x_buffer, y_buffer, z_buffer)
     }
 }

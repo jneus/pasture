@@ -20,7 +20,7 @@ pub fn main() {
 async fn run() -> Result<()> {
     let mut reader = LASReader::from_path(
         //"/home/jnoice/dev/pasture/pasture-io/examples/in/10_points_format_1.las",
-        "/home/jnoice/Downloads/WSV_Pointcloud_Tile-3-1.laz",
+        "/home/jnoice/Downloads/interesting.las",
     )?;
     let count = reader.remaining_points();
     let mut buffer = InterleavedVecPointStorage::with_capacity(count, LasPointFormat0::layout());
@@ -39,6 +39,7 @@ async fn run() -> Result<()> {
         .point_buffer
         .unwrap()
         .iter_point::<IndexedPointType>()
+        .take(5)
     {
         println!("{:?}", point);
     }

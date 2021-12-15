@@ -20,3 +20,5 @@ pub mod voxel_grid;
 // Contains a normal estimation algorithm that can be used to determine the orientation of the surface
 // over a point and its k nearest neighbors. The algorithm also determine the curvature of the surface
 pub mod normal_estimation;
+
+pub mod gpu;
