@@ -27,15 +27,16 @@ pub struct SimplePoint {
 
 async fn run() -> Result<()> {
     let mut reader = LASReader::from_path(
-        "/home/jnoice/dev/pasture/pasture-io/examples/in/10_points_format_1.las",
+        //"/home/jnoice/dev/pasture/pasture-io/examples/in/10_points_format_1.las",
         //"/home/jnoice/Downloads/WSV_Pointcloud_Tile-3-1.laz",
+        "/home/jnoice/Downloads/interesting.las",
     )?;
     let count = reader.remaining_points();
     let mut buffer = InterleavedVecPointStorage::with_capacity(count, LasPointFormat0::layout());
     reader.read_into(&mut buffer, count)?;
 
     for point in buffer.iter_point::<LasPointFormat0>().take(5) {
-        println!("{:?}", point.position);
+        println!("{:?}", point);
     }
 
     let mut query_point = InterleavedVecPointStorage::with_capacity(1, SimplePoint::layout());
@@ -43,7 +44,7 @@ async fn run() -> Result<()> {
     query_point.push_point(SimplePoint { position: pos });
 
     let mut found_point = InterleavedVecPointStorage::new(LasPointFormat0::layout());
-    //found_point.push_point(buffer.get_point::<LasPointFormat0>(0));
+    found_point.push_point(buffer.get_point::<LasPointFormat0>(0));
     let attribs = &[attributes::POSITION_3D, attributes::INTENSITY];
 
     find_nearest_neighbour(&buffer, &query_point, attribs, &mut found_point).await;

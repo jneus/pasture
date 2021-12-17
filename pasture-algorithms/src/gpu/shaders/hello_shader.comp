@@ -34,7 +34,7 @@ void main() {
       currentShortestDist = currDist;
         if(shortestDist > 0 && currDist < shortestDist) {
           shortestDist = currDist;
-          nearest = pointBuffer[idx];
+          nearest.position = pointBuffer[idx].position;
         }
     }
     barrier();

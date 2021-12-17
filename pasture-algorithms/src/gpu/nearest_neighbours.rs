@@ -16,7 +16,7 @@ pub async fn find_nearest_neighbour(
     buf: &PointBuffer,
     query_point_buffer: &PointBuffer,
     attribs: &[PointAttributeDefinition],
-    return_buffer: &mut InterleavedVecPointStorage,
+    mut return_buffer: &mut InterleavedVecPointStorage,
 ) -> Result<()> {
     let count = buf.len();
 
