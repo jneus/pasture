@@ -25,6 +25,7 @@ num-traits = "0.2.14"
 
 # gpu related
 futures = { version = "0.3", optional = true}
+bytemuck = { version = "1.5.1", optional = true }
 
 [dev-dependencies]
 criterion = "0.3"
@@ -35,7 +36,7 @@ name = "convexhull_bench"
 harness = false
 
 [features]
-gpu = ["pasture-core/gpu", "futures"]
+gpu = ["pasture-core/gpu", "futures", "bytemuck"]
 
 [profile.bench]
 debug = true

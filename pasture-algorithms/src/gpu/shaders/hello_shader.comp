@@ -1,18 +1,44 @@
 #version 450
 
+
 struct PointBuffer {
     dvec4 position;
-    u32 index;
 };
 
-layout(std430, binding=0) buffer PointBufferSsbo {
+layout(std430, set=0, binding=0) buffer PointBufferSsbo {
     PointBuffer pointBuffer[];
 };
-layout(binding=1) uniform PointBuffer query;
+
+layout(std140, set=1, binding=0) uniform queryBuffer {
+    PointBuffer query[1];
+};
+
+// layout(std430, set=1, binding=0) buffer foundBuffer{
+//     PointBuffer foundPoint[1];
+// };
+
+shared PointBuffer nearest;
+shared double shortestDist;
 
 void main() {
+    double currentShortestDist = -1;
 
     uint idx = gl_GlobalInvocationID.x;
+    double x_diff = (pointBuffer[idx].position.x - query[0].position.x) * (pointBuffer[idx].position.x - query[0].position.x);
+    double y_diff = (pointBuffer[idx].position.y - query[0].position.y) * (pointBuffer[idx].position.y - query[0].position.y);
+    double z_diff = (pointBuffer[idx].position.z - query[0].position.z) * (pointBuffer[idx].position.z - query[0].position.z);
 
+    double currDist = sqrt(x_diff + y_diff + z_diff);
 
+    if(currentShortestDist < 0 || currDist < currentShortestDist) {
+      currentShortestDist = currDist;
+        if(shortestDist > 0 && currDist < shortestDist) {
+          shortestDist = currDist;
+          nearest = pointBuffer[idx];
+        }
+    }
+    barrier();
+    if(idx == 0) {
+      pointBuffer[idx] = nearest;
+    }
 }
